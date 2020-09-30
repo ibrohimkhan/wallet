@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/ibrohimkhan/wallet/pkg/wallet"
+	"github.com/ibrohimkhan/wallet/v1.0.0/pkg/wallet"
 )
 
 func main() {

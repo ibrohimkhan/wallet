@@ -3,7 +3,7 @@ package wallet
 import (
 	"github.com/google/uuid"
 	"errors"
-	"github.com/ibrohimkhan/wallet/pkg/types"
+	"github.com/ibrohimkhan/wallet/v1.0.0/pkg/types"
 )
 
 // ErrPhoneRegistered - registration error
