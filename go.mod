@@ -1,4 +1,4 @@
-module github.com/ibrohimkhan/wallet/v1.0.0
+module github.com/ibrohimkhan/wallet/v1.1.0
 
 go 1.15
 

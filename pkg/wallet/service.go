@@ -3,7 +3,7 @@ package wallet
 import (
 	"github.com/google/uuid"
 	"errors"
-	"github.com/ibrohimkhan/wallet/v1.0.0/pkg/types"
+	"github.com/ibrohimkhan/wallet/v1.1.0/pkg/types"
 )
 
 // ErrPhoneRegistered - registration error
@@ -17,6 +17,9 @@ var ErrAccountNotFound = errors.New("Account not found")
 
 // ErrNotEnoughBalance - balance is less then required for payment
 var ErrNotEnoughBalance = errors.New("The balance does not have enough money")
+
+// ErrPaymentNotFound - payment does not exist
+var ErrPaymentNotFound = errors.New("Payment not found")
 
 // Service - storage for payments and accounts
 type Service struct {
@@ -118,4 +121,38 @@ func (s *Service) FindAccountByID(accountID int64) (*types.Account, error) {
 	}
 
 	return account, nil
+}
+
+// Reject cencel payment
+func (s *Service) Reject(paymentID string) error {
+	payment, err := s.FindPaymentByID(paymentID)
+	if err != nil {
+		return ErrPaymentNotFound
+	}
+
+	payment.Status = types.PaymentStatusFail
+	account, err := s.FindAccountByID(payment.AccountID)
+	if err != nil {
+		return ErrAccountNotFound
+	}
+
+	account.Balance += payment.Amount
+	return nil
+}
+
+// FindPaymentByID searching payment by id
+func (s *Service) FindPaymentByID(paymentID string) (*types.Payment, error) {
+	var payment *types.Payment
+	for _, item := range s.payments {
+		if item.ID == paymentID {
+			payment = item
+			break
+		}
+	}
+
+	if payment == nil {
+		return nil, ErrPaymentNotFound
+	}
+
+	return payment, nil
 }
