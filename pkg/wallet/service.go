@@ -106,53 +106,42 @@ func (s *Service) Pay(accountID int64, amount types.Money, category types.Paymen
 	return payment, nil
 }
 
-// FindAccountByID find account by id
-func (s *Service) FindAccountByID(accountID int64) (*types.Account, error) {
-	var account *types.Account
-	for _, item := range s.accounts {
-		if item.ID == accountID {
-			account = item
-			break
-		}
-	}
-
-	if account == nil {
-		return nil, ErrAccountNotFound
-	}
-
-	return account, nil
-}
-
 // Reject cencel payment
 func (s *Service) Reject(paymentID string) error {
 	payment, err := s.FindPaymentByID(paymentID)
 	if err != nil {
-		return ErrPaymentNotFound
+		return err
+	}
+
+	account, err := s.FindAccountByID(payment.AccountID)
+	if err != nil {
+		return err
 	}
 
 	payment.Status = types.PaymentStatusFail
-	account, err := s.FindAccountByID(payment.AccountID)
-	if err != nil {
-		return ErrAccountNotFound
+	account.Balance += payment.Amount
+
+	return nil
+}
+
+// FindAccountByID find account by id
+func (s *Service) FindAccountByID(accountID int64) (*types.Account, error) {
+	for _, account := range s.accounts {
+		if account.ID == accountID {
+			return account, nil
+		}
 	}
 
-	account.Balance += payment.Amount
-	return nil
+	return nil, ErrAccountNotFound
 }
 
 // FindPaymentByID searching payment by id
 func (s *Service) FindPaymentByID(paymentID string) (*types.Payment, error) {
-	var payment *types.Payment
-	for _, item := range s.payments {
-		if item.ID == paymentID {
-			payment = item
-			break
+	for _, payment := range s.payments {
+		if payment.ID == paymentID {
+			return payment, nil
 		}
 	}
 
-	if payment == nil {
-		return nil, ErrPaymentNotFound
-	}
-
-	return payment, nil
+	return nil, ErrPaymentNotFound
 }
