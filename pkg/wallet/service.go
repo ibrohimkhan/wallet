@@ -124,6 +124,21 @@ func (s *Service) Reject(paymentID string) error {
 	return nil
 }
 
+// Repeat payment
+func (s *Service) Repeat(paymentID string) (*types.Payment, error) {
+	payment, err := s.FindPaymentByID(paymentID)
+	if err != nil {
+		return nil, err
+	}
+
+	repay, err := s.Pay(payment.AccountID, payment.Amount, payment.Category)
+	if err != nil {
+		return nil, err
+	}
+
+	return repay, nil
+}
+
 // FindAccountByID find account by id
 func (s *Service) FindAccountByID(accountID int64) (*types.Account, error) {
 	for _, account := range s.accounts {

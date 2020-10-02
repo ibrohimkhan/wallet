@@ -121,6 +121,28 @@ func TestService_Reject_success(t *testing.T) {
 	}
 }
 
+func TestService_Repeat_success(t *testing.T) {
+	s := newTestService()
+
+	_, payments, err := s.addAcount(defaultTestAccount)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	payment := payments[0]
+	repay, err := s.Repeat(payment.ID)
+	if err != nil {
+		t.Errorf("Repeat(): can't repeat payment, error = %v", err)
+		return
+	}
+
+	if repay.Category != payment.Category && repay.Amount != payment.Amount {
+		t.Error("Repeat(): couldn't repeat the payment")
+		return
+	}
+}
+
 type testAccount struct {
 	phone		types.Phone
 	balance		types.Money
