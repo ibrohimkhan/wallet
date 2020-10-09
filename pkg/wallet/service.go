@@ -1,7 +1,8 @@
 package wallet
 
 import (
-	"path/filepath"
+	"strings"
+	"io"
 	"strconv"
 	"log"
 	"os"
@@ -191,13 +192,8 @@ func (s *Service) FindFavoriteByID(favoriteID string) (*types.Favorite, error) {
 	return nil, ErrFavoriteNotFound
 }
 
-// ExportToFile save accounts into a file
+// ExportToFile saves accounts into a file
 func (s *Service) ExportToFile(path string) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0770); err != nil {
-		log.Println(err)
-		return err
-	}
-	
 	file, err := os.Create(path)
 	if err != nil {
 		log.Println(err)
@@ -222,10 +218,73 @@ func (s *Service) ExportToFile(path string) error {
 	return nil
 }
 
+// ImportFromFile restores accounts into objects
+func (s *Service) ImportFromFile(path string) error {
+	file, err := os.Open(path)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Println(err)
+		}
+	}()
+
+	content := make([]byte, 0)
+	buf := make([]byte, 4096)
+
+	for {
+		read, err := file.Read(buf)
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+
+		content = append(content, buf[:read]...)
+	}
+
+	data := string(content)
+	accounts := s.parseStringToAccounts(data)
+
+	for _, account := range accounts {
+		s.accounts = append(s.accounts, account)
+	}
+	
+	return nil
+}
+
 func (s *Service) parseAccountToString(account *types.Account) string {
 	parsed := strconv.FormatInt(account.ID, 10) + ";"
 	parsed += string(account.Phone) + ";"
 	parsed += strconv.FormatInt(int64(account.Balance), 10) + "|"
 	
 	return parsed
+}
+
+func (s *Service) parseStringToAccounts(data string) []*types.Account {
+	var accounts []*types.Account
+	
+	for _, items := range strings.Split(data, "|") {
+		item := strings.Split(items, ";")
+
+		id, _ 		:= strconv.ParseInt(item[0], 10, 64)
+		phone 		:= types.Phone(item[1])
+		balance, _ 	:= strconv.ParseInt(item[2], 10, 64)
+
+		account := &types.Account {
+			ID:			id,
+			Phone:		phone,
+			Balance:	types.Money(balance),
+		}
+
+		accounts = append(accounts, account)
+	}
+
+	return accounts
 }

@@ -227,7 +227,7 @@ func TestService_Export_success(t *testing.T) {
 	}
 	s.Deposit(account.ID, 102)
 
-	err = s.ExportToFile("data/accounts.txt")
+	err = s.ExportToFile("accounts.txt")
 	if err != nil {
 		t.Error(err)
 		return
