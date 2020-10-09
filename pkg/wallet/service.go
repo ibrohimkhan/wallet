@@ -1,6 +1,7 @@
 package wallet
 
 import (
+	"path/filepath"
 	"strconv"
 	"log"
 	"os"
@@ -192,6 +193,11 @@ func (s *Service) FindFavoriteByID(favoriteID string) (*types.Favorite, error) {
 
 // ExportToFile save accounts into a file
 func (s *Service) ExportToFile(path string) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0770); err != nil {
+		log.Println(err)
+		return err
+	}
+	
 	file, err := os.Create(path)
 	if err != nil {
 		log.Println(err)

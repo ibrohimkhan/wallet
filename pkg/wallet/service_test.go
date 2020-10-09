@@ -203,6 +203,37 @@ func TestService_Repeat_success(t *testing.T) {
 	}
 }
 
+func TestService_Export_success(t *testing.T) {
+	s := &Service{}
+
+	account, err := s.RegisterAccount("+992937452945")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	s.Deposit(account.ID, 100)
+
+	account, err = s.RegisterAccount("+992937452946")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	s.Deposit(account.ID, 101)
+
+	account, err = s.RegisterAccount("+992937452947")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	s.Deposit(account.ID, 102)
+
+	err = s.ExportToFile("data/accounts.txt")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+}
+
 type testAccount struct {
 	phone		types.Phone
 	balance		types.Money
