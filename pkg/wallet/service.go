@@ -57,16 +57,9 @@ func (s *Service) Deposit(accountID int64, amount types.Money) error {
 		return ErrAmountMustBePositive
 	}
 
-	var account *types.Account
-	for _, item := range s.accounts {
-		if item.ID == accountID {
-			account = item
-			break
-		}
-	}
-
-	if account == nil {
-		return ErrAccountNotFound
+	account, err := s.FindAccountByID(accountID)
+	if err != nil {
+		return err
 	}
 
 	account.Balance += amount
@@ -79,16 +72,9 @@ func (s *Service) Pay(accountID int64, amount types.Money, category types.Paymen
 		return nil, ErrAmountMustBePositive
 	}
 
-	var account *types.Account
-	for _, item := range s.accounts {
-		if item.ID == accountID {
-			account = item
-			break
-		}
-	}
-
-	if account == nil {
-		return nil, ErrAccountNotFound
+	account, err := s.FindAccountByID(accountID)
+	if err != nil {
+		return nil, err
 	}
 
 	if account.Balance < amount {
@@ -135,12 +121,7 @@ func (s *Service) Repeat(paymentID string) (*types.Payment, error) {
 		return nil, err
 	}
 
-	repay, err := s.Pay(payment.AccountID, payment.Amount, payment.Category)
-	if err != nil {
-		return nil, err
-	}
-
-	return repay, nil
+	return s.Pay(payment.AccountID, payment.Amount, payment.Category)
 }
 
 // FavoritePayment creates favorite payment
