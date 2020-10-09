@@ -1,6 +1,9 @@
 package wallet
 
 import (
+	"strconv"
+	"log"
+	"os"
 	"github.com/google/uuid"
 	"errors"
 	"github.com/ibrohimkhan/wallet/v1.1.0/pkg/types"
@@ -185,4 +188,38 @@ func (s *Service) FindFavoriteByID(favoriteID string) (*types.Favorite, error) {
 	}
 
 	return nil, ErrFavoriteNotFound
+}
+
+// ExportToFile save accounts into a file
+func (s *Service) ExportToFile(path string) error {
+	file, err := os.Create(path)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Println(err)
+		}
+	}()
+
+	for _, account := range s.accounts {
+		parsed := s.parseAccountToString(account)
+		_, err := file.Write([]byte(parsed))
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *Service) parseAccountToString(account *types.Account) string {
+	parsed := strconv.FormatInt(account.ID, 10) + ";"
+	parsed += string(account.Phone) + ";"
+	parsed += strconv.FormatInt(int64(account.Balance), 10) + "\n"
+	
+	return parsed
 }
