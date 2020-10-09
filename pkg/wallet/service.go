@@ -269,21 +269,32 @@ func (s *Service) parseAccountToString(account *types.Account) string {
 
 func (s *Service) parseStringToAccounts(data string) []*types.Account {
 	var accounts []*types.Account
-	
+
 	for _, items := range strings.Split(data, "|") {
 		item := strings.Split(items, ";")
 
-		id, _ 		:= strconv.ParseInt(item[0], 10, 64)
-		phone 		:= types.Phone(item[1])
-		balance, _ 	:= strconv.ParseInt(item[2], 10, 64)
+		if len(item) < 3 {
+			account := &types.Account {
+				ID:			0,
+				Phone:		types.Phone(item[0]),
+				Balance:	0,
+			}
 
-		account := &types.Account {
-			ID:			id,
-			Phone:		phone,
-			Balance:	types.Money(balance),
+			accounts = append(accounts, account)
+		
+		} else {
+			id, _ 		:= strconv.ParseInt(item[0], 10, 64)
+			phone 		:= types.Phone(item[1])
+			balance, _ 	:= strconv.ParseInt(item[2], 10, 64)
+
+			account := &types.Account {
+				ID:			id,
+				Phone:		phone,
+				Balance:	types.Money(balance),
+			}
+
+			accounts = append(accounts, account)
 		}
-
-		accounts = append(accounts, account)
 	}
 
 	return accounts
