@@ -225,7 +225,7 @@ func (s *Service) ExportToFile(path string) error {
 func (s *Service) parseAccountToString(account *types.Account) string {
 	parsed := strconv.FormatInt(account.ID, 10) + ";"
 	parsed += string(account.Phone) + ";"
-	parsed += strconv.FormatInt(int64(account.Balance), 10) + "\n"
+	parsed += strconv.FormatInt(int64(account.Balance), 10) + "|"
 	
 	return parsed
 }
