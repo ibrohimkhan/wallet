@@ -195,7 +195,7 @@ func (s *Service) FindFavoriteByID(favoriteID string) (*types.Favorite, error) {
 
 // ExportToFile saves accounts into a file
 func (s *Service) ExportToFile(path string) error {
-	err := s.exportAccountsToFile(path)
+	err := s.exportAccountsToFile(path, "|")
 	if err != nil {
 		log.Println(err)
 		return err
@@ -212,7 +212,7 @@ func (s *Service) ImportFromFile(path string) error {
 		return err
 	}
 
-	accounts := s.parseStringToAccounts(data)
+	accounts := s.parseStringToAccounts(data, "|")
 	for _, account := range accounts {
 		s.accounts = append(s.accounts, account)
 	}
@@ -229,7 +229,7 @@ func (s *Service) Export(dir string) error {
 			return err
 		}
 
-		err = s.exportAccountsToFile(fullpath) 
+		err = s.exportAccountsToFile(fullpath, "\n") 
 		if err != nil {
 			log.Println(err)
 			return err
@@ -354,7 +354,7 @@ func (s *Service) getFullPath(dir string, filename string) (string, error) {
 	return fullpath, nil
 }
 
-func (s *Service) exportAccountsToFile(path string) error {
+func (s *Service) exportAccountsToFile(path string, sep string) error {
 	file, err := os.Create(path)
 	if err != nil {
 		log.Println(err)
@@ -368,7 +368,7 @@ func (s *Service) exportAccountsToFile(path string) error {
 	}()
 
 	for _, account := range s.accounts {
-		parsed := s.parseAccountToString(account)
+		parsed := s.parseAccountToString(account, sep)
 		_, err := file.Write([]byte(parsed))
 		if err != nil {
 			log.Println(err)
@@ -435,7 +435,7 @@ func (s *Service) importAccountsFromFile(path string) ([]*types.Account, error) 
 		return nil, err
 	}
 
-	accounts := s.parseStringToAccounts(data)
+	accounts := s.parseStringToAccounts(data, "\n")
 	return accounts, nil
 }
 
@@ -493,19 +493,19 @@ func (s *Service) getDataFromFile(path string) (string, error) {
 	return data, nil
 }
 
-func (s *Service) parseAccountToString(account *types.Account) string {
+func (s *Service) parseAccountToString(account *types.Account, sep string) string {
 	parsed := strconv.FormatInt(account.ID, 10) + ";"
 	parsed += string(account.Phone) + ";"
-	parsed += strconv.FormatInt(int64(account.Balance), 10) + "\n"
+	parsed += strconv.FormatInt(int64(account.Balance), 10) + sep
 	
 	return parsed
 }
 
-func (s *Service) parseStringToAccounts(data string) []*types.Account {
+func (s *Service) parseStringToAccounts(data string, sep string) []*types.Account {
 	var accounts []*types.Account
 
 	data = strings.TrimSpace(data)
-	for _, items := range strings.Split(data, "\n") {
+	for _, items := range strings.Split(data, sep) {
 		item := strings.Split(items, ";")
 
 		if len(item) < 3 {
