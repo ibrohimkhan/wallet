@@ -279,66 +279,83 @@ func (s *Service) Import(dir string) error {
 	}
 
 	accountsPath := path + "/accounts.dump"
-	accounts, err := s.importAccountsFromFile(accountsPath)
-	if err != nil {
-		log.Println(err)
-	}
+	if s.fileExist(accountsPath) {
+		accounts, err := s.importAccountsFromFile(accountsPath)
+		if err != nil {
+			log.Println(err)
+		}
 
-	for _, dumpAccount := range accounts {
-		for _, inmemoryAccount := range s.accounts {
-			if dumpAccount.ID == inmemoryAccount.ID {
-				inmemoryAccount.Phone = dumpAccount.Phone
-				inmemoryAccount.Balance += dumpAccount.Balance
-			} else {
-				s.accounts = append(s.accounts, dumpAccount)
-				s.nextAccountID++
+		for _, dumpAccount := range accounts {
+			for _, inmemoryAccount := range s.accounts {
+				if dumpAccount.ID == inmemoryAccount.ID {
+					inmemoryAccount.Phone = dumpAccount.Phone
+					inmemoryAccount.Balance += dumpAccount.Balance
+				} else {
+					s.accounts = append(s.accounts, dumpAccount)
+					s.nextAccountID++
+				}
 			}
 		}
+
+		log.Println("size of accounts = ", len(accounts))
 	}
 
 	paymentsPath := path + "/payments.dump"
-	payments, err := s.importPaymentsFromFile(paymentsPath)
-	if err != nil {
-		log.Println(err)
-	}
+	if s.fileExist(paymentsPath) {
+		payments, err := s.importPaymentsFromFile(paymentsPath)
+		if err != nil {
+			log.Println(err)
+		}
 
-	for _, dumpPayment := range payments {
-		for _, inmemoryPayment := range s.payments {
-			if dumpPayment.ID == inmemoryPayment.ID {
-				inmemoryPayment.AccountID 	= dumpPayment.AccountID
-				inmemoryPayment.Amount 		= dumpPayment.Amount
-				inmemoryPayment.Category 	= dumpPayment.Category
-				inmemoryPayment.Status 		= dumpPayment.Status
-			} else {
-				s.payments = append(s.payments, dumpPayment)
+		for _, dumpPayment := range payments {
+			for _, inmemoryPayment := range s.payments {
+				if dumpPayment.ID == inmemoryPayment.ID {
+					inmemoryPayment.AccountID 	= dumpPayment.AccountID
+					inmemoryPayment.Amount 		= dumpPayment.Amount
+					inmemoryPayment.Category 	= dumpPayment.Category
+					inmemoryPayment.Status 		= dumpPayment.Status
+				} else {
+					s.payments = append(s.payments, dumpPayment)
+				}
 			}
 		}
+
+		log.Println("size of payments = ", len(payments))
 	}
 
 	favoritesPath := path + "/favorites.dump"
-	favorites, err := s.importFavoritesFromFile(favoritesPath)
-	if err != nil {
-		log.Println(err)
-	}
+	if s.fileExist(favoritesPath) {
+		favorites, err := s.importFavoritesFromFile(favoritesPath)
+		if err != nil {
+			log.Println(err)
+		}
 
-	for _, dumpFavorite := range favorites {
-		for _, inmemoryFavorite := range s.favorites {
-			if dumpFavorite.ID == inmemoryFavorite.ID {
-				inmemoryFavorite.AccountID 	= dumpFavorite.AccountID
-				inmemoryFavorite.Name 		= dumpFavorite.Name
-				inmemoryFavorite.Amount 	= dumpFavorite.Amount
-				inmemoryFavorite.Category 	= dumpFavorite.Category
-			} else {
-				s.favorites = append(s.favorites, dumpFavorite)
+		for _, dumpFavorite := range favorites {
+			for _, inmemoryFavorite := range s.favorites {
+				if dumpFavorite.ID == inmemoryFavorite.ID {
+					inmemoryFavorite.AccountID 	= dumpFavorite.AccountID
+					inmemoryFavorite.Name 		= dumpFavorite.Name
+					inmemoryFavorite.Amount 	= dumpFavorite.Amount
+					inmemoryFavorite.Category 	= dumpFavorite.Category
+				} else {
+					s.favorites = append(s.favorites, dumpFavorite)
+				}
 			}
 		}
+
+		log.Println("size of favorites = ", len(favorites))
 	}
 
-	log.Println("size of accounts = ", len(accounts))
-	log.Println("size of payments = ", len(payments))
-	log.Println("size of favorites = ", len(favorites))
-
 	return nil
+}
+
+func (s *Service) fileExist(path string) bool {
+	info, err := os.Stat(path)
+    if os.IsNotExist(err) {
+        return false
+	}
+	
+    return !info.IsDir()
 }
 
 func (s *Service) getFullPath(dir string, filename string) (string, error) {
