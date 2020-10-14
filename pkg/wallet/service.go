@@ -286,15 +286,9 @@ func (s *Service) Import(dir string) error {
 		}
 
 		for _, dumpAccount := range accounts {
-			for _, inmemoryAccount := range s.accounts {
-				if dumpAccount.ID == inmemoryAccount.ID {
-					inmemoryAccount.Phone = dumpAccount.Phone
-					inmemoryAccount.Balance += dumpAccount.Balance
-					break
-				} else {
-					s.accounts = append(s.accounts, dumpAccount)
-					s.nextAccountID++
-				}
+			if !s.containsAccount(dumpAccount, s.accounts) {
+				s.accounts = append(s.accounts, dumpAccount)
+				s.nextAccountID++
 			}
 		}
 
@@ -309,16 +303,8 @@ func (s *Service) Import(dir string) error {
 		}
 
 		for _, dumpPayment := range payments {
-			for _, inmemoryPayment := range s.payments {
-				if dumpPayment.ID == inmemoryPayment.ID {
-					inmemoryPayment.AccountID 	= dumpPayment.AccountID
-					inmemoryPayment.Amount 		= dumpPayment.Amount
-					inmemoryPayment.Category 	= dumpPayment.Category
-					inmemoryPayment.Status 		= dumpPayment.Status
-					break
-				} else {
-					s.payments = append(s.payments, dumpPayment)
-				}
+			if !s.containsPayment(dumpPayment, s.payments) {
+				s.payments = append(s.payments, dumpPayment)
 			}
 		}
 
@@ -333,16 +319,8 @@ func (s *Service) Import(dir string) error {
 		}
 
 		for _, dumpFavorite := range favorites {
-			for _, inmemoryFavorite := range s.favorites {
-				if dumpFavorite.ID == inmemoryFavorite.ID {
-					inmemoryFavorite.AccountID 	= dumpFavorite.AccountID
-					inmemoryFavorite.Name 		= dumpFavorite.Name
-					inmemoryFavorite.Amount 	= dumpFavorite.Amount
-					inmemoryFavorite.Category 	= dumpFavorite.Category
-					break
-				} else {
-					s.favorites = append(s.favorites, dumpFavorite)
-				}
+			if !s.containsFavorite(dumpFavorite, s.favorites) {
+				s.favorites = append(s.favorites, dumpFavorite)
 			}
 		}
 
@@ -629,4 +607,47 @@ func (s *Service) parseStringToFavorites(data string) []*types.Favorite {
 	}
 
 	return favorites
+}
+
+func (s *Service) containsAccount(item *types.Account, items []*types.Account) bool {
+	for _, value := range items {
+		if value.ID == item.ID {
+			value.Phone 	= item.Phone
+			value.Balance 	= item.Balance
+
+			return true
+		}
+	}
+
+	return false
+}
+
+func (s *Service) containsPayment(item *types.Payment, items []*types.Payment) bool {
+	for _, value := range items {
+		if value.ID == item.ID {
+			value.AccountID 	= item.AccountID
+			value.Amount 		= item.Amount
+			value.Category	 	= item.Category
+			value.Status 		= item.Status
+
+			return true
+		}
+	}
+
+	return false
+}
+
+func (s *Service) containsFavorite(item *types.Favorite, items []*types.Favorite) bool {
+	for _, value := range items {
+		if value.ID == item.ID {
+			value.AccountID 	= item.AccountID
+			value.Name 			= item.Name
+			value.Amount 		= item.Amount
+			value.Category	 	= item.Category
+
+			return true
+		}
+	}
+
+	return false
 }
