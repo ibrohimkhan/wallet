@@ -290,6 +290,7 @@ func (s *Service) Import(dir string) error {
 				if dumpAccount.ID == inmemoryAccount.ID {
 					inmemoryAccount.Phone = dumpAccount.Phone
 					inmemoryAccount.Balance += dumpAccount.Balance
+					break
 				} else {
 					s.accounts = append(s.accounts, dumpAccount)
 					s.nextAccountID++
@@ -314,6 +315,7 @@ func (s *Service) Import(dir string) error {
 					inmemoryPayment.Amount 		= dumpPayment.Amount
 					inmemoryPayment.Category 	= dumpPayment.Category
 					inmemoryPayment.Status 		= dumpPayment.Status
+					break
 				} else {
 					s.payments = append(s.payments, dumpPayment)
 				}
@@ -337,6 +339,7 @@ func (s *Service) Import(dir string) error {
 					inmemoryFavorite.Name 		= dumpFavorite.Name
 					inmemoryFavorite.Amount 	= dumpFavorite.Amount
 					inmemoryFavorite.Category 	= dumpFavorite.Category
+					break
 				} else {
 					s.favorites = append(s.favorites, dumpFavorite)
 				}
