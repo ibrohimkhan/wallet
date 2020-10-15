@@ -396,7 +396,7 @@ func (s *Service) HistoryToFiles(payments []types.Payment, dir string, records i
 		maxRecords := len(allPayments) / records
 
 		for index, payment := range allPayments {
-			filename := "payments" + string(count) + ".dump"
+			filename := "payments" + strconv.Itoa(count) + ".dump"
 			fullpath, err := s.getFullPath(dir, filename)
 			if err != nil {
 				log.Println(err)
