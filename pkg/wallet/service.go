@@ -349,7 +349,7 @@ func (s *Service) ExportAccountHistory(accountID int64) ([]*types.Payment, error
 
 // HistoryToFiles exports payments to files
 func (s *Service) HistoryToFiles(payments []*types.Payment, dir string, records int) error {
-	var allPayments []*types.Payment
+	/*var allPayments []*types.Payment
 
 	for _, payment := range payments {
 		foundPayments, err := s.ExportAccountHistory(payment.AccountID)
@@ -361,9 +361,13 @@ func (s *Service) HistoryToFiles(payments []*types.Payment, dir string, records 
 		for _, item := range foundPayments {
 			allPayments = append(allPayments, item)
 		}
+	}*/
+
+	if payments == nil || len(payments) == 0 {
+		return nil
 	}
 
-	if len(payments) < records {
+	if len(payments) <= records {
 		fullpath, err := s.getFullPath(dir, "payments.dump")
 		if err != nil {
 			log.Println(err)
@@ -396,7 +400,7 @@ func (s *Service) HistoryToFiles(payments []*types.Payment, dir string, records 
 		maxRecords := len(payments) / records
 
 		for index, payment := range payments {
-			filename := "payments" + strconv.Itoa(count) + ".dump"
+			filename := "payments" + strconv.Itoa(index + 1) + ".dump"
 			fullpath, err := s.getFullPath(dir, filename)
 			if err != nil {
 				log.Println(err)
