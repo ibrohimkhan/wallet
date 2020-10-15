@@ -348,7 +348,7 @@ func (s *Service) ExportAccountHistory(accountID int64) ([]*types.Payment, error
 }
 
 // HistoryToFiles exports payments to files
-func (s *Service) HistoryToFiles(payments []types.Payment, dir string, records int) error {
+func (s *Service) HistoryToFiles(payments []*types.Payment, dir string, records int) error {
 	var allPayments []*types.Payment
 
 	for _, payment := range payments {
