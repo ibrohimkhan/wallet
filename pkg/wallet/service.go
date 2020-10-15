@@ -349,20 +349,6 @@ func (s *Service) ExportAccountHistory(accountID int64) ([]*types.Payment, error
 
 // HistoryToFiles exports payments to files
 func (s *Service) HistoryToFiles(payments []*types.Payment, dir string, records int) error {
-	/*var allPayments []*types.Payment
-
-	for _, payment := range payments {
-		foundPayments, err := s.ExportAccountHistory(payment.AccountID)
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-
-		for _, item := range foundPayments {
-			allPayments = append(allPayments, item)
-		}
-	}*/
-
 	if payments == nil || len(payments) == 0 {
 		return nil
 	}
@@ -396,43 +382,60 @@ func (s *Service) HistoryToFiles(payments []*types.Payment, dir string, records 
 		}
 
 	} else {
-		count := 1
-		maxRecords := len(payments) / records
+		count := 0
+
+		filename := "payments" + strconv.Itoa(count + 1) + ".dump"
+		fullpath, err := s.getFullPath(dir, filename)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+
+		file, err := os.Create(fullpath)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+
+		defer func() {
+			if err := file.Close(); err != nil {
+				log.Println(err)
+			}
+		}()
 
 		for index, payment := range payments {
-			filename := "payments" + strconv.Itoa(index + 1) + ".dump"
-			fullpath, err := s.getFullPath(dir, filename)
-			if err != nil {
-				log.Println(err)
-				return err
-			}
+			if index % records == 0 {
+				count++
 
-			file, err := os.Create(fullpath)
-			if err != nil {
-				log.Println(err)
-				return err
-			}
-
-			defer func() {
-				if err := file.Close(); err != nil {
+				filename = "payments" + strconv.Itoa(count) + ".dump"
+				fullpath, err = s.getFullPath(dir, filename)
+				if err != nil {
 					log.Println(err)
+					return err
 				}
-			}()
 
+				file, err = os.Create(fullpath)
+				if err != nil {
+					log.Println(err)
+					return err
+				}
+			}
+			
 			parsed := s.parsePaymentToString(payment)
 			_, err = file.Write([]byte(parsed))
 			if err != nil {
 				log.Println(err)
 				return err
 			}
-
-			if index + 1 >= maxRecords {
-				count++
-			}
 		}
 	}
 
 	return nil
+}
+
+// GetPayments returns payments
+func (s *Service) GetPayments() []*types.Payment {
+	return s.payments
 }
 
 func (s *Service) fileExist(path string) bool {

@@ -9,8 +9,30 @@ import (
 )
 
 func main() {
-	importData()
-	//exportData()
+	history()
+}
+
+func history() {
+	s := &wallet.Service{}
+
+	createData(s)
+	payments := s.GetPayments()
+
+	path, err := filepath.Abs(".")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	fullpath := path + "/data"
+
+	err = s.HistoryToFiles(payments, fullpath, 4)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	fmt.Println(len(payments))
 }
 
 func importData() {
