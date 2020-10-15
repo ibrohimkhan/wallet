@@ -363,7 +363,7 @@ func (s *Service) HistoryToFiles(payments []*types.Payment, dir string, records 
 		}
 	}
 
-	if len(allPayments) <= records {
+	if len(payments) < records {
 		fullpath, err := s.getFullPath(dir, "payments.dump")
 		if err != nil {
 			log.Println(err)
@@ -382,7 +382,7 @@ func (s *Service) HistoryToFiles(payments []*types.Payment, dir string, records 
 			}
 		}()
 
-		for _, payment := range allPayments {
+		for _, payment := range payments {
 			parsed := s.parsePaymentToString(payment)
 			_, err := file.Write([]byte(parsed))
 			if err != nil {
@@ -393,9 +393,9 @@ func (s *Service) HistoryToFiles(payments []*types.Payment, dir string, records 
 
 	} else {
 		count := 1
-		maxRecords := len(allPayments) / records
+		maxRecords := len(payments) / records
 
-		for index, payment := range allPayments {
+		for index, payment := range payments {
 			filename := "payments" + strconv.Itoa(count) + ".dump"
 			fullpath, err := s.getFullPath(dir, filename)
 			if err != nil {
