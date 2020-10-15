@@ -330,6 +330,107 @@ func (s *Service) Import(dir string) error {
 	return nil
 }
 
+// ExportAccountHistory get payments by accountid
+func (s *Service) ExportAccountHistory(accountID int64) ([]*types.Payment, error) {
+	var payments []*types.Payment
+
+	for _, payment := range s.payments {
+		if payment.AccountID == accountID {
+			payments = append(payments, payment)
+		}
+	}
+
+	if payments == nil || len(payments) == 0 {
+		return nil, ErrAccountNotFound
+	}
+
+	return payments, nil
+}
+
+// HistoryToFiles exports payments to files
+func (s *Service) HistoryToFiles(payments []types.Payment, dir string, records int) error {
+	var allPayments []*types.Payment
+
+	for _, payment := range payments {
+		foundPayments, err := s.ExportAccountHistory(payment.AccountID)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		for _, item := range foundPayments {
+			allPayments = append(allPayments, item)
+		}
+	}
+
+	if len(allPayments) <= records {
+		fullpath, err := s.getFullPath(dir, "payments.dump")
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+
+		file, err := os.Create(fullpath)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+
+		defer func() {
+			if err := file.Close(); err != nil {
+				log.Println(err)
+			}
+		}()
+
+		for _, payment := range allPayments {
+			parsed := s.parsePaymentToString(payment)
+			_, err := file.Write([]byte(parsed))
+			if err != nil {
+				log.Println(err)
+				return err
+			}
+		}
+
+	} else {
+		count := 1
+		maxRecords := len(allPayments) / records
+
+		for index, payment := range allPayments {
+			filename := "payments" + string(count) + ".dump"
+			fullpath, err := s.getFullPath(dir, filename)
+			if err != nil {
+				log.Println(err)
+				return err
+			}
+
+			file, err := os.Create(fullpath)
+			if err != nil {
+				log.Println(err)
+				return err
+			}
+
+			defer func() {
+				if err := file.Close(); err != nil {
+					log.Println(err)
+				}
+			}()
+
+			parsed := s.parsePaymentToString(payment)
+			_, err = file.Write([]byte(parsed))
+			if err != nil {
+				log.Println(err)
+				return err
+			}
+
+			if index + 1 >= maxRecords {
+				count++
+			}
+		}
+	}
+
+	return nil
+}
+
 func (s *Service) fileExist(path string) bool {
 	info, err := os.Stat(path)
     if os.IsNotExist(err) {
