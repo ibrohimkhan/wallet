@@ -1,6 +1,9 @@
 package wallet
 
 import (
+	"strings"
+	"os"
+	"path/filepath"
 	"github.com/google/uuid"
 	"fmt"
 	"github.com/ibrohimkhan/wallet/v1.1.0/pkg/types"
@@ -256,6 +259,26 @@ func TestService_Export_success(t *testing.T) {
 	}
 }
 
+func TestService_Import_success(t *testing.T) {
+	s := &Service{}
+
+	if len(s.accounts) > 0 {
+		t.Fail()
+		return
+	}
+
+	err := s.ImportFromFile("accounts.txt")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if len(s.accounts) == 0 {
+		t.Fail()
+		return
+	}
+}
+
 func TestService_ConcurrentSumOfPayments_success(t *testing.T) {
 	s := newTestService()
 
@@ -366,6 +389,402 @@ func TestService_Min_fail(t *testing.T) {
 
 	min := s.min(1, 2)
 	if min == 2 {
+		t.Fail()
+	}
+}
+
+func TestService_FileExist_success(t *testing.T) {
+	s := &Service{}
+
+	err := s.ExportToFile("accounts.txt")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	isExist := s.fileExist("accounts.txt")
+	if !isExist {
+		t.Fail()
+	}
+}
+
+func TestService_GetFullPath_success(t *testing.T) {
+	s := &Service{}
+
+	err := s.ExportToFile("accounts.txt")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	path, err := s.getFullPath(".", "accounts.txt")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	fullpath := filepath.Dir(path) + "/accounts.txt"
+	if fullpath != path {
+		t.Fail()
+		return
+	}
+}
+
+func TestService_ExportAccountsToFile(t *testing.T) {
+	s := &Service{}
+
+	path := "accounts.txt"
+	err := s.exportAccountsToFile(path, "\n")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	_, err = os.Stat(path)
+	if os.IsExist(err) {
+		t.Error(err)
+		return
+	}
+
+	err = os.Remove(path)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+}
+
+func TestService_ExportPaymentsToFile(t *testing.T) {
+	s := &Service{}
+
+	path := "payments.txt"
+	err := s.exportPaymentsToFile(path)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	_, err = os.Stat(path)
+	if os.IsExist(err) {
+		t.Error(err)
+		return
+	}
+	
+	err = os.Remove(path)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+}
+
+func TestService_ExportFavoritesToFile(t *testing.T) {
+	s := &Service{}
+
+	path := "favorites.txt"
+	err := s.exportFavoritesToFile(path)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	_, err = os.Stat(path)
+	if os.IsExist(err) {
+		t.Error(err)
+		return
+	}
+	
+	err = os.Remove(path)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+}
+
+func TestService_ImportAccountsFromFile(t *testing.T) {
+	s := &Service{}
+
+	path := "accounts.txt"
+	err := s.exportAccountsToFile(path, "\n")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	_, err = s.importAccountsFromFile(path)
+	if err != nil {
+		t.Fail()
+		return
+	}
+
+	err = os.Remove(path)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+}
+
+func TestService_ImportPaymentsFromFile(t *testing.T) {
+	s := &Service{}
+
+	path := "payments.txt"
+	err := s.exportPaymentsToFile(path)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	_, err = s.importPaymentsFromFile(path)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	
+	err = os.Remove(path)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+}
+
+func TestService_ImportFavoritesFromFile(t *testing.T) {
+	s := &Service{}
+
+	path := "favorites.txt"
+	err := s.exportFavoritesToFile(path)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	_, err = s.importFavoritesFromFile(path)
+	if err != nil {
+		t.Fail()
+		return
+	}
+	
+	err = os.Remove(path)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+}
+
+func TestService_GetDataFromFile(t *testing.T) {
+	s := &Service{}
+
+	account, err := s.RegisterAccount("+992937452945")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	s.Deposit(account.ID, 100)
+
+	account, err = s.RegisterAccount("+992937452946")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	s.Deposit(account.ID, 101)
+
+	account, err = s.RegisterAccount("+992937452947")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	s.Deposit(account.ID, 102)
+
+	err = s.ExportToFile("accounts.txt")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	data, err := s.getDataFromFile("accounts.txt")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	result := "1;+992937452945;100|2;+992937452946;101|3;+992937452947;102|"
+	if data != result {
+		t.Fail()
+	}
+}
+
+func TestService_ParseAccountToString(t *testing.T) {
+	s := &Service{}
+
+	account, err := s.RegisterAccount("+992937452945")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	data := s.parseAccountToString(account, "|")
+	expected := "1;+992937452945;0|"
+	if data != expected {
+		t.Fail()
+		return
+	}
+}
+
+func TestService_ParseStringToAccount(t *testing.T) {
+	s := &Service{}
+
+	account, err := s.RegisterAccount("+992937452945")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	
+	result := s.parseStringToAccounts("1;+992937452945;0|", "|")[0]
+	if !reflect.DeepEqual(result, account) {
+		t.Fail()
+	}
+}
+
+func TestService_ParsePaymentToString(t *testing.T) {
+	s := &Service{}
+
+	payment := &types.Payment {
+		ID:				"1",
+		AccountID:		1,
+		Amount:			10,
+		Category:		"auto",
+		Status:			types.PaymentStatusOk,
+	}
+
+	expected := "1;1;10;auto;OK"
+	result := strings.TrimSpace(s.parsePaymentToString(payment))
+	
+	if result != expected {
+		t.Fail()
+	}
+}
+
+func TestService_ParseStringToPayment(t *testing.T) {
+	s := &Service{}
+
+	expected := &types.Payment {
+		ID:				"1",
+		AccountID:		1,
+		Amount:			10,
+		Category:		"auto",
+		Status:			types.PaymentStatusOk,
+	}
+
+	data := "1;1;10;auto;OK"
+	result := s.parseStringToPayments(data)[0]
+	
+	if !reflect.DeepEqual(result, expected) {
+		t.Fail()
+	}
+}
+
+func TestService_ParseFavoriteToString(t *testing.T) {
+	s := &Service{}
+
+	favorite := &types.Favorite {
+		ID:				"1",
+		AccountID:		1,
+		Name:			"auto",
+		Amount:			10,
+		Category:		"auto",
+	}
+
+	expected := "1;1;auto;10;auto"
+	result := strings.TrimSpace(s.parseFavoriteToString(favorite))
+	
+	if result != expected {
+		t.Fail()
+	}
+}
+
+func TestService_ParseStringToFavorite(t *testing.T) {
+	s := &Service{}
+
+	expected := &types.Favorite {
+		ID:				"1",
+		AccountID:		1,
+		Name:			"auto",
+		Amount:			10,
+		Category:		"auto",
+	}
+
+	data := "1;1;auto;10;auto"
+	result := s.parseStringToFavorites(data)[0]
+	
+	if !reflect.DeepEqual(result, expected) {
+		t.Fail()
+	}
+}
+
+func TestService_ContainsAccount(t *testing.T) {
+	s := &Service{}
+
+	account, err := s.RegisterAccount("+992937452945")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	account2, err := s.RegisterAccount("+992937452946")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	accounts := []*types.Account{account, account2}
+	if !s.containsAccount(account, accounts) {
+		t.Fail()
+	}
+}
+
+func TestService_ContainsPayment(t *testing.T) {
+	s := &Service{}
+
+	payment := &types.Payment {
+		ID:				"1",
+		AccountID:		1,
+		Amount:			10,
+		Category:		"auto",
+		Status:			types.PaymentStatusOk,
+	}
+
+	payment2 := &types.Payment {
+		ID:				"2",
+		AccountID:		1,
+		Amount:			10,
+		Category:		"auto",
+		Status:			types.PaymentStatusOk,
+	}
+
+	payments := []*types.Payment{payment, payment2}
+	if !s.containsPayment(payment, payments) {
+		t.Fail()
+	}
+}
+
+func TestService_ContainsFavorite(t *testing.T) {
+	s := &Service{}
+
+	favorite := &types.Favorite {
+		ID:				"1",
+		AccountID:		1,
+		Name:			"auto",
+		Amount:			10,
+		Category:		"auto",
+	}
+
+	favorite2 := &types.Favorite {
+		ID:				"2",
+		AccountID:		1,
+		Name:			"auto",
+		Amount:			10,
+		Category:		"auto",
+	}
+
+	favorites := []*types.Favorite{favorite, favorite2}
+	if !s.containsFavorite(favorite, favorites) {
 		t.Fail()
 	}
 }

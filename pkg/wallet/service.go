@@ -593,6 +593,10 @@ func (s *Service) importAccountsFromFile(path string) ([]*types.Account, error) 
 		return nil, err
 	}
 
+	if data == "" {
+		return nil, nil
+	}
+
 	accounts := s.parseStringToAccounts(data, "\n")
 	return accounts, nil
 }
@@ -603,6 +607,10 @@ func (s *Service) importPaymentsFromFile(path string) ([]*types.Payment, error) 
 		return nil, err
 	}
 
+	if data == "" {
+		return nil, nil
+	}
+
 	payments := s.parseStringToPayments(data)
 	return payments, nil
 }
@@ -611,6 +619,10 @@ func (s *Service) importFavoritesFromFile(path string) ([]*types.Favorite, error
 	data, err := s.getDataFromFile(path)
 	if err != nil {
 		return nil, err
+	}
+
+	if data == "" {
+		return nil, nil
 	}
 
 	favorites := s.parseStringToFavorites(data)
