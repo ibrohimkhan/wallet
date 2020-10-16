@@ -234,6 +234,73 @@ func TestService_Export_success(t *testing.T) {
 	}
 }
 
+func TestService_ConcurrentSumOfPayments_success(t *testing.T) {
+	s := newTestService()
+
+	payments := []*types.Payment {
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+	}
+	
+	s.payments = payments
+
+	expected := types.Money(15)
+	result := s.SumPayments(3)
+
+	if result != expected {
+		t.Errorf("invalid result! Expected %v, got %v", expected, result)
+		return
+	}
+}
+
+func TestService_SumOf_success(t *testing.T) {
+	s := newTestService()
+
+	payments := []*types.Payment {
+		{ Amount: 1_000_00, Category:	"auto" },
+		{ Amount: 1_000_00, Category:	"auto" },
+		{ Amount: 1_000_00, Category:	"auto" },
+	}
+
+	expected := types.Money(3_000_00)
+	result := s.sumOf(payments)
+
+	if result != expected {
+		t.Error("invalid result")
+		return
+	}
+}
+
+func TestService_SumOf_fail(t *testing.T) {
+	s := newTestService()
+
+	payments := []*types.Payment {
+		{ Amount: 1_000_00, Category:	"auto" },
+		{ Amount: 1_000_00, Category:	"auto" },
+	}
+
+	expected := types.Money(3_000_00)
+	result := s.sumOf(payments)
+
+	if result == expected {
+		t.Error("invalid result")
+		return
+	}
+}
+
 func BenchmarkSumOfPaymentsRegular(b *testing.B) {
 	s := newTestService()
 	_, _, _, err := s.addAcount(defaultTestAccount)
@@ -241,7 +308,7 @@ func BenchmarkSumOfPaymentsRegular(b *testing.B) {
 		b.Error(err)
 		return
 	}
-	
+
 	want := types.Money(1_000_00)
 	for i := 0; i < b.N; i++ {
 		result := s.sumOf(s.payments)
