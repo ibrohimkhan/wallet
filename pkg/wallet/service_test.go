@@ -234,6 +234,40 @@ func TestService_Export_success(t *testing.T) {
 	}
 }
 
+func BenchmarkSumOfPaymentsRegular(b *testing.B) {
+	s := newTestService()
+	_, _, _, err := s.addAcount(defaultTestAccount)
+	if err != nil {
+		b.Error(err)
+		return
+	}
+	
+	want := types.Money(1_000_00)
+	for i := 0; i < b.N; i++ {
+		result := s.sumOf(s.payments)
+		if result != want {
+			b.Fatalf("invalid result, got %v, want %v", result, want)
+		}
+	}	
+}
+
+func BenchmarkSumOfPaymentsConcurrently(b *testing.B) {
+	s := newTestService()
+	_, _, _, err := s.addAcount(defaultTestAccount)
+	if err != nil {
+		b.Error(err)
+		return
+	}
+
+	want := types.Money(1_000_00)
+	for i := 0; i < b.N; i++ {
+		result := s.SumPayments(2)
+		if result != want {
+			b.Fatalf("invalid result, got %v, want %v", result, want)
+		}
+	}
+}
+
 type testAccount struct {
 	phone		types.Phone
 	balance		types.Money

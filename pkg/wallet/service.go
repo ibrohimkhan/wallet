@@ -442,7 +442,7 @@ func (s *Service) GetPayments() []*types.Payment {
 
 // SumPayments returns sum of all payment
 func (s *Service) SumPayments(goroutines int) types.Money {
-	if goroutines <= 1 {
+	if goroutines <= 1 || len(s.payments) == 1 {
 		return s.sumOf(s.payments)
 	}
 
@@ -462,8 +462,8 @@ func (s *Service) SumPayments(goroutines int) types.Money {
 		wg.Add(1)
 		go func(val int) {
 			defer wg.Done()
-			items := data[val]
-			sum += s.sumOf(items)
+			payments := data[val]
+			sum += s.sumOf(payments)
 		}(i)
 	}
 	wg.Wait()
