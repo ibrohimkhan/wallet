@@ -458,7 +458,7 @@ func (s *Service) SumPayments(goroutines int) types.Money {
 	}
 	
 	wg := sync.WaitGroup{}
-	for i := 0; i <= goroutines + 1; i++ {
+	for i := 0; i < position; i++ {
 		wg.Add(1)
 		go func(val int) {
 			defer wg.Done()

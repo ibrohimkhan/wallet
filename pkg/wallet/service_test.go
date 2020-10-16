@@ -125,23 +125,6 @@ func TestService_FindFavoriteByID_fail(t *testing.T) {
 	}
 }
 
-func TestService_PayFromFavorite_success(t *testing.T) {
-	s := newTestService()
-
-	_, _, favorites, err := s.addAcount(defaultTestAccount)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-
-	favorite := favorites[0]
-	_, err = s.PayFromFavorite(favorite.ID)
-	if err != nil {
-		t.Errorf("PayFromFavorite(): couldn't pay from favorites, error = %v", err)
-		return
-	}
-}
-
 func TestService_Reject_success(t *testing.T) {
 	s := newTestService()
 
@@ -199,6 +182,45 @@ func TestService_Repeat_success(t *testing.T) {
 
 	if repay.Category != payment.Category && repay.Amount != payment.Amount {
 		t.Error("Repeat(): couldn't repeat the payment")
+		return
+	}
+}
+
+func  TestService_FavoritePayment_success(t *testing.T) {
+	s := newTestService()
+
+	_, payments, _, err := s.addAcount(defaultTestAccount)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	payment := payments[0]
+	fav, err := s.FavoritePayment(payment.ID, string(payment.Category))
+	if err  != nil {
+		t.Error(err)
+		return
+	}
+
+	if fav.Amount != payment.Amount {
+		t.Error(err)
+		return
+	}
+}
+
+func TestService_PayFromFavorite_success(t *testing.T) {
+	s := newTestService()
+
+	_, _, favorites, err := s.addAcount(defaultTestAccount)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	favorite := favorites[0]
+	_, err = s.PayFromFavorite(favorite.ID)
+	if err != nil {
+		t.Errorf("PayFromFavorite(): couldn't pay from favorites, error = %v", err)
 		return
 	}
 }
@@ -266,6 +288,35 @@ func TestService_ConcurrentSumOfPayments_success(t *testing.T) {
 	}
 }
 
+func TestService_ConcurrentSumOfPayments_fail(t *testing.T) {
+	s := newTestService()
+
+	payments := []*types.Payment {
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+		{ Amount: 1, Category:	"auto" },
+	}
+	
+	s.payments = payments
+
+	expected := types.Money(15)
+	result := s.SumPayments(3)
+
+	if result == expected {
+		t.Errorf("invalid result! Expected %v, got %v", expected, result)
+		return
+	}
+}
+
 func TestService_SumOf_success(t *testing.T) {
 	s := newTestService()
 
@@ -298,6 +349,24 @@ func TestService_SumOf_fail(t *testing.T) {
 	if result == expected {
 		t.Error("invalid result")
 		return
+	}
+}
+
+func TestService_Min_success(t *testing.T) {
+	s := newTestService()
+
+	min := s.min(1, 2)
+	if min != 1 {
+		t.Fail()
+	}
+}
+
+func TestService_Min_fail(t *testing.T) {
+	s := newTestService()
+
+	min := s.min(1, 2)
+	if min == 2 {
+		t.Fail()
 	}
 }
 
