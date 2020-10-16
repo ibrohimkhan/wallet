@@ -1,6 +1,8 @@
 package wallet
 
 import (
+	"sync"
+	"math"
 	"path/filepath"
 	"strings"
 	"io"
@@ -436,6 +438,53 @@ func (s *Service) HistoryToFiles(payments []*types.Payment, dir string, records 
 // GetPayments returns payments
 func (s *Service) GetPayments() []*types.Payment {
 	return s.payments
+}
+
+// SumPayments returns sum of all payment
+func (s *Service) SumPayments(goroutines int) types.Money {
+	if goroutines <= 1 {
+		return s.sumOf(s.payments)
+	}
+
+	sum := types.Money(0)
+	proportion := int(math.Ceil(float64(len(s.payments)) / float64(goroutines)))
+	
+	position := 0
+	data := make([][]*types.Payment, proportion)
+	for i := 0; i < len(s.payments); i += goroutines {
+		end := s.min(goroutines + i, len(s.payments))
+		data[position] = s.payments[i : end]
+		position++
+	}
+	
+	wg := sync.WaitGroup{}
+	for i := 0; i <= goroutines; i++ {
+		wg.Add(1)
+		go func(val int) {
+			defer wg.Done()
+			items := data[val]
+			sum += s.sumOf(items)
+		}(i)
+	}
+	wg.Wait()
+	
+	return sum
+}
+
+func (s *Service) sumOf(payments []*types.Payment) types.Money {
+	sum := types.Money(0)
+
+	for _, payment := range payments {
+		sum += payment.Amount
+	}
+	return sum
+}
+
+func (s *Service) min(a int, b int) int {
+	if a <= b {
+		return a
+	}
+	return b
 }
 
 func (s *Service) fileExist(path string) bool {

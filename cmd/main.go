@@ -1,6 +1,8 @@
 package main
 
 import (
+	"math"
+	"sync"
 	"path/filepath"
 	"log"
 	"os"
@@ -9,7 +11,106 @@ import (
 )
 
 func main() {
-	history()
+	//history()
+	arr := []int{1,2,3,4,5,6,7,8,9,10}
+	sep := 3
+	proportion := int(math.Ceil(float64(len(arr)) / float64(sep)))
+	fmt.Println(proportion)
+
+	position := 0
+	data := make([][]int, proportion)
+	for i := 0; i < len(arr); i += sep {
+		data[position] = arr[i:min(sep + i, len(arr))]
+		position++
+	}
+
+	fmt.Println(data)
+	sum := 0
+
+	wg := sync.WaitGroup{}
+	for i := 0; i <= sep; i++ {
+		wg.Add(1)
+		go func(val int) {
+			defer wg.Done()
+			items := data[val]
+			sum += sum1(items)
+		}(i)
+	}
+	wg.Wait()
+	fmt.Println(sum)
+	
+	fmt.Println(sum1(arr))
+}
+
+func min(a int, b int) int  {
+	if a <= b {
+		return a
+	}
+	return b
+}
+
+func sum1(items []int) int {
+	amount := 0
+	for _, item := range items {
+		amount += item
+	}
+
+	return amount
+}
+
+func closure() {
+	count := 10
+	wg := sync.WaitGroup{}
+	for i := 0; i < count; i++ {
+		wg.Add(1)
+		go func(val int) {
+			defer wg.Done()
+			log.Println(val)
+		}(i)
+	}
+	wg.Wait()
+}
+
+func concurrently() int {
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+
+	mu := sync.Mutex{}
+	sum := 0
+
+	go func() {
+		defer wg.Done()
+		val := 0
+		for i  :=  0; i < 1_000_000; i++ {
+			val++
+		}
+		mu.Lock()
+		defer mu.Unlock()
+		sum += val
+	}()
+		
+	go func() {
+		defer wg.Done()
+		val := 0
+		for i  :=  0; i < 1_000_000; i++ {
+			val++
+		}
+		mu.Lock()
+		defer mu.Unlock()
+		sum += val
+	}()
+
+	wg.Wait()
+	return sum
+}
+
+func regular() int {
+	sum := 0
+	for i  :=  0; i < 2_000_000; i++ {
+		sum++
+	}
+
+	return sum
 }
 
 func history() {
