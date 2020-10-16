@@ -257,6 +257,12 @@ func TestService_Export_success(t *testing.T) {
 		t.Error(err)
 		return
 	}
+
+	err = os.Remove("accounts.txt")
+	if err != nil {
+		t.Error(err)
+		return
+	}
 }
 
 func TestService_Import_success(t *testing.T) {
@@ -267,7 +273,20 @@ func TestService_Import_success(t *testing.T) {
 		return
 	}
 
-	err := s.ImportFromFile("accounts.txt")
+	account, err := s.RegisterAccount("+992937452947")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	s.Deposit(account.ID, 102)
+
+	err = s.ExportToFile("accounts.txt")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	err = s.ImportFromFile("accounts.txt")
 	if err != nil {
 		t.Error(err)
 		return
@@ -275,6 +294,12 @@ func TestService_Import_success(t *testing.T) {
 
 	if len(s.accounts) == 0 {
 		t.Fail()
+		return
+	}
+
+	err = os.Remove("accounts.txt")
+	if err != nil {
+		t.Error(err)
 		return
 	}
 }
@@ -406,6 +431,12 @@ func TestService_FileExist_success(t *testing.T) {
 	if !isExist {
 		t.Fail()
 	}
+
+	err = os.Remove("accounts.txt")
+	if err != nil {
+		t.Error(err)
+		return
+	}
 }
 
 func TestService_GetFullPath_success(t *testing.T) {
@@ -426,6 +457,12 @@ func TestService_GetFullPath_success(t *testing.T) {
 	fullpath := filepath.Dir(path) + "/accounts.txt"
 	if fullpath != path {
 		t.Fail()
+		return
+	}
+
+	err = os.Remove("accounts.txt")
+	if err != nil {
+		t.Error(err)
 		return
 	}
 }
@@ -607,6 +644,12 @@ func TestService_GetDataFromFile(t *testing.T) {
 	result := "1;+992937452945;100|2;+992937452946;101|3;+992937452947;102|"
 	if data != result {
 		t.Fail()
+	}
+
+	err = os.Remove("accounts.txt")
+	if err != nil {
+		t.Error(err)
+		return
 	}
 }
 
