@@ -498,6 +498,10 @@ func (s *Service) FilterPayments(accountID int64, goroutines int) ([]types.Payme
 	}
 	wg.Wait()
 
+	if len(payments) == 0 {
+		return nil, ErrAccountNotFound
+	}
+
 	return payments, nil
 }
 
