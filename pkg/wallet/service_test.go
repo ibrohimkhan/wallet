@@ -340,18 +340,18 @@ func TestService_ConcurrentSumOfPayments_fail(t *testing.T) {
 	s := newTestService()
 
 	payments := []*types.Payment {
-		{ Amount: 1, Category:	"auto" },
-		{ Amount: 1, Category:	"auto" },
-		{ Amount: 1, Category:	"auto" },
-		{ Amount: 1, Category:	"auto" },
-		{ Amount: 1, Category:	"auto" },
-		{ Amount: 1, Category:	"auto" },
-		{ Amount: 1, Category:	"auto" },
-		{ Amount: 1, Category:	"auto" },
-		{ Amount: 1, Category:	"auto" },
-		{ Amount: 1, Category:	"auto" },
-		{ Amount: 1, Category:	"auto" },
-		{ Amount: 1, Category:	"auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 2, Amount: 1, Category: "auto" },
+		{ AccountID: 4, Amount: 1, Category: "auto" },
+		{ AccountID: 2, Amount: 1, Category: "auto" },
+		{ AccountID: 3, Amount: 1, Category: "auto" },
 	}
 	
 	s.payments = payments
@@ -361,6 +361,38 @@ func TestService_ConcurrentSumOfPayments_fail(t *testing.T) {
 
 	if result == expected {
 		t.Errorf("invalid result! Expected %v, got %v", expected, result)
+		return
+	}
+}
+
+func TestService_FilterPayments_success(t *testing.T) {
+	s := newTestService()
+
+	payments := []*types.Payment {
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 2, Amount: 1, Category: "auto" },
+		{ AccountID: 4, Amount: 1, Category: "auto" },
+		{ AccountID: 2, Amount: 1, Category: "auto" },
+		{ AccountID: 3, Amount: 1, Category: "auto" },
+	}
+	
+	s.payments = payments
+	filtered, err := s.FilterPayments(1, 3)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if len(filtered) != 8 {
+		t.Fail()
+		t.Errorf("invalid result! Expected %v, got %v", 8, len(filtered))
 		return
 	}
 }
@@ -862,6 +894,38 @@ func BenchmarkSumOfPaymentsConcurrently(b *testing.B) {
 		result := s.SumPayments(2)
 		if result != want {
 			b.Fatalf("invalid result, got %v, want %v", result, want)
+		}
+	}
+}
+
+func BenchmarkFilterPayments(b *testing.B) {
+	s := newTestService()
+
+	payments := []*types.Payment {
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 2, Amount: 1, Category: "auto" },
+		{ AccountID: 4, Amount: 1, Category: "auto" },
+		{ AccountID: 2, Amount: 1, Category: "auto" },
+		{ AccountID: 3, Amount: 1, Category: "auto" },
+	}
+	
+	s.payments = payments
+	want := 8
+	for i := 0; i < b.N; i++ {
+		filtered, err := s.FilterPayments(1, 3)
+		if err != nil {
+			b.Error(err)
+			return
+		}
+		if len(filtered) != want {
+			b.Fatalf("invalid result, got %v, want %v", len(filtered), want)
 		}
 	}
 }
