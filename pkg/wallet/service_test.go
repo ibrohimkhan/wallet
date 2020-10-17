@@ -368,29 +368,25 @@ func TestService_ConcurrentSumOfPayments_fail(t *testing.T) {
 func TestService_FilterPayments_success(t *testing.T) {
 	s := newTestService()
 
+	accounts := []*types.Account {
+		{ ID: 1, Phone: "111111", Balance: 0 },
+		{ ID: 2, Phone: "111111", Balance: 0 },
+	}
+
+	s.accounts = accounts
+
 	payments := []*types.Payment {
 		{ AccountID: 1, Amount: 1, Category: "auto" },
-		{ AccountID: 1, Amount: 1, Category: "auto" },
-		{ AccountID: 1, Amount: 1, Category: "auto" },
-		{ AccountID: 1, Amount: 1, Category: "auto" },
-		{ AccountID: 1, Amount: 1, Category: "auto" },
-		{ AccountID: 1, Amount: 1, Category: "auto" },
-		{ AccountID: 1, Amount: 1, Category: "auto" },
-		{ AccountID: 1, Amount: 1, Category: "auto" },
-		{ AccountID: 2, Amount: 1, Category: "auto" },
-		{ AccountID: 4, Amount: 1, Category: "auto" },
-		{ AccountID: 2, Amount: 1, Category: "auto" },
-		{ AccountID: 3, Amount: 1, Category: "auto" },
 	}
 	
 	s.payments = payments
-	filtered, err := s.FilterPayments(1, 3)
+	filtered, err := s.FilterPayments(2, 1)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if len(filtered) != 8 {
+	if len(filtered) != 0 {
 		t.Fail()
 		t.Errorf("invalid result! Expected %v, got %v", 8, len(filtered))
 		return
@@ -961,6 +957,15 @@ func BenchmarkSumOfPaymentsConcurrently(b *testing.B) {
 func BenchmarkFilterPaymentsRegular(b *testing.B) {
 	s := newTestService()
 
+	accounts := []*types.Account {
+		{ ID: 1, Phone: "111111", Balance: 0 },
+		{ ID: 2, Phone: "111111", Balance: 0 },
+		{ ID: 3, Phone: "111111", Balance: 0 },
+		{ ID: 4, Phone: "111111", Balance: 0 },
+	}
+
+	s.accounts = accounts
+
 	payments := []*types.Payment {
 		{ AccountID: 1, Amount: 1, Category: "auto" },
 		{ AccountID: 1, Amount: 1, Category: "auto" },
@@ -993,6 +998,15 @@ func BenchmarkFilterPaymentsRegular(b *testing.B) {
 func BenchmarkFilterPaymentsConcurrently(b *testing.B) {
 	s := newTestService()
 
+	accounts := []*types.Account {
+		{ ID: 1, Phone: "111111", Balance: 0 },
+		{ ID: 2, Phone: "111111", Balance: 0 },
+		{ ID: 3, Phone: "111111", Balance: 0 },
+		{ ID: 4, Phone: "111111", Balance: 0 },
+	}
+
+	s.accounts = accounts
+	
 	payments := []*types.Payment {
 		{ AccountID: 1, Amount: 1, Category: "auto" },
 		{ AccountID: 1, Amount: 1, Category: "auto" },

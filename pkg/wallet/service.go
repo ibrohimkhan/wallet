@@ -470,6 +470,11 @@ func (s *Service) SumPayments(goroutines int) types.Money {
 
 // FilterPayments filters payments by accountID
 func (s *Service) FilterPayments(accountID int64, goroutines int) ([]types.Payment, error) {
+	_, err := s.FindAccountByID(accountID)
+	if err != nil {
+		return nil, err
+	}
+
 	if len(s.payments) == 0 {
 		return nil, nil
 	}
@@ -480,10 +485,6 @@ func (s *Service) FilterPayments(accountID int64, goroutines int) ([]types.Payme
 			if payment.AccountID == accountID {
 				payments = append(payments, *payment)
 			}
-		}
-		
-		if len(payments) == 0 {
-			return nil, ErrAccountNotFound
 		}
 
 		return payments, nil
@@ -539,10 +540,6 @@ func (s *Service) FilterPaymentsByFn(
 			if filter(*payment) {
 				payments = append(payments, *payment)
 			}
-		}
-		
-		if len(payments) == 0 {
-			return nil, ErrAccountNotFound
 		}
 
 		return payments, nil
