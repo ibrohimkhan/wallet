@@ -461,18 +461,23 @@ func (s *Service) SumPayments(goroutines int) types.Money {
 	mu := sync.Mutex{}
 	for i := 0; i < position; i++ {
 		wg.Add(1)
-		go func(val int) {
-			defer wg.Done()
-			mu.Lock()
-			defer mu.Unlock()
-			payments := data[val]
-			sum += s.sumOf(payments)
-			log.Println(sum)
-		}(i)
+		go s.concurrentSum(&sum, data[i], &wg, &mu)
 	}
 	wg.Wait()
 	
 	return sum
+}
+
+func (s *Service) concurrentSum(amount *types.Money, payments []*types.Payment, wg *sync.WaitGroup, mu *sync.Mutex) {
+	sum := types.Money(0)
+	mu.Lock()
+	for _, payment := range payments {
+		sum += payment.Amount
+	}
+
+	*amount += sum
+	mu.Unlock()
+	wg.Done()
 }
 
 func (s *Service) sumOf(payments []*types.Payment) types.Money {
