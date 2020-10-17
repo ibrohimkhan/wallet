@@ -370,23 +370,31 @@ func TestService_FilterPayments_success(t *testing.T) {
 
 	accounts := []*types.Account {
 		{ ID: 1, Phone: "111111", Balance: 0 },
-		{ ID: 2, Phone: "111111", Balance: 0 },
 	}
 
 	s.accounts = accounts
 
 	payments := []*types.Payment {
 		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
 	}
 	
 	s.payments = payments
-	filtered, err := s.FilterPayments(2, 1)
+	filtered, err := s.FilterPayments(1, 2)
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	if len(filtered) != 0 {
+	if len(filtered) != 10 {
 		t.Fail()
 		t.Errorf("invalid result! Expected %v, got %v", 8, len(filtered))
 		return

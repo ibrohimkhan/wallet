@@ -502,7 +502,7 @@ func (s *Service) FilterPayments(accountID int64, goroutines int) ([]types.Payme
 	
 	wg := sync.WaitGroup{}
 	mu := sync.Mutex{}
-	for i := 0; i <= goroutines; i++ {
+	for i := 0; i < position; i++ {
 		wg.Add(1)
 		go func(val int) {
 			defer wg.Done()
@@ -557,7 +557,7 @@ func (s *Service) FilterPaymentsByFn(
 	
 	wg := sync.WaitGroup{}
 	mu := sync.Mutex{}
-	for i := 0; i <= goroutines; i++ {
+	for i := 0; i < position; i++ {
 		wg.Add(1)
 		go func(val int) {
 			defer wg.Done()
