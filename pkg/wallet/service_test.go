@@ -917,9 +917,9 @@ func BenchmarkFilterPayments(b *testing.B) {
 	}
 	
 	s.payments = payments
-	want := 8
+	want := 2
 	for i := 0; i < b.N; i++ {
-		filtered, err := s.FilterPayments(1, 3)
+		filtered, err := s.FilterPayments(2, 3)
 		if err != nil {
 			b.Error(err)
 			return
