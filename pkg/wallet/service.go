@@ -499,7 +499,16 @@ func (s *Service) FilterPayments(accountID int64, goroutines int) ([]types.Payme
 	mu := sync.Mutex{}
 	for i := 0; i <= goroutines; i++ {
 		wg.Add(1)
-		go s.concurrentFilter(&payments, accountID, data[i], &wg, &mu)
+		go func(val int) {
+			defer wg.Done()
+			for _, payment := range data[val] {
+				if payment.AccountID == accountID {
+					mu.Lock()
+					payments = append(payments, *payment)
+					mu.Unlock()
+				}
+			}
+		}(i)
 	}
 	wg.Wait()
 
@@ -508,18 +517,6 @@ func (s *Service) FilterPayments(accountID int64, goroutines int) ([]types.Payme
 	}
 
 	return payments, nil
-}
-
-func (s *Service) concurrentFilter(result *[]types.Payment, accountID int64, payments []*types.Payment, wg *sync.WaitGroup, mu *sync.Mutex) {
-	for _, payment := range payments {
-		if payment.AccountID == accountID {
-			mu.Lock()
-			*result = append(*result, *payment)
-			mu.Unlock()
-		}
-	}
-	
-	wg.Done()
 }
 
 func (s *Service) concurrentSum(amount *types.Money, payments []*types.Payment, wg *sync.WaitGroup, mu *sync.Mutex) {
