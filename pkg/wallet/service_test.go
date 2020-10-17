@@ -397,6 +397,40 @@ func TestService_FilterPayments_success(t *testing.T) {
 	}
 }
 
+func TestService_FilterPaymentsByFn_success(t *testing.T) {
+	s := newTestService()
+
+	payments := []*types.Payment {
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "book" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "book" },
+		{ AccountID: 2, Amount: 1, Category: "auto" },
+		{ AccountID: 4, Amount: 1, Category: "auto" },
+		{ AccountID: 2, Amount: 1, Category: "auto" },
+		{ AccountID: 3, Amount: 1, Category: "book" },
+	}
+	
+	s.payments = payments
+	filter := s.filter
+	filtered, err := s.FilterPaymentsByFn(filter, 3)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	want := 3
+	if len(filtered) != want {
+		t.Fail()
+		t.Errorf("invalid result! Expected %v, got %v", want, len(filtered))
+		return
+	}
+}
+
 func TestService_SumOf_success(t *testing.T) {
 	s := newTestService()
 
@@ -864,6 +898,32 @@ func TestService_ContainsFavorite(t *testing.T) {
 	}
 }
 
+func TestService_FilterPayment(t *testing.T) {
+	s := &Service{}
+
+	payment := &types.Payment {
+		ID:				"1",
+		AccountID:		1,
+		Amount:			10,
+		Category:		"book",
+		Status:			types.PaymentStatusOk,
+	}
+
+	payment2 := &types.Payment {
+		ID:				"2",
+		AccountID:		1,
+		Amount:			10,
+		Category:		"auto",
+		Status:			types.PaymentStatusOk,
+	}
+
+	s.payments = append(s.payments, payment)
+	s.payments = append(s.payments, payment2)
+	if !s.filter(*payment) {
+		t.Fail()
+	}
+}
+
 func BenchmarkSumOfPaymentsRegular(b *testing.B) {
 	s := newTestService()
 	_, _, _, err := s.addAcount(defaultTestAccount)
@@ -952,6 +1012,38 @@ func BenchmarkFilterPaymentsConcurrently(b *testing.B) {
 	want := 2
 	for i := 0; i < b.N; i++ {
 		filtered, err := s.FilterPayments(2, 3)
+		if err != nil {
+			b.Error(err)
+			return
+		}
+		if len(filtered) != want {
+			b.Fatalf("invalid result, got %v, want %v", len(filtered), want)
+		}
+	}
+}
+
+func BenchmarkFilterPaymentsByFnConcurrently(b *testing.B) {
+	s := newTestService()
+
+	payments := []*types.Payment {
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "book" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "book" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 2, Amount: 1, Category: "auto" },
+		{ AccountID: 4, Amount: 1, Category: "auto" },
+		{ AccountID: 2, Amount: 1, Category: "auto" },
+		{ AccountID: 3, Amount: 1, Category: "book" },
+	}
+	
+	s.payments = payments
+	want := 3
+	for i := 0; i < b.N; i++ {
+		filtered, err := s.FilterPaymentsByFn(s.filter, 3)
 		if err != nil {
 			b.Error(err)
 			return

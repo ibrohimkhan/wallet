@@ -523,6 +523,65 @@ func (s *Service) FilterPayments(accountID int64, goroutines int) ([]types.Payme
 	return payments, nil
 }
 
+// FilterPaymentsByFn filters payments by function
+func (s *Service) FilterPaymentsByFn(
+    filter func(payment types.Payment) bool, 
+    goroutines int,
+) ([]types.Payment, error) {
+
+	if len(s.payments) == 0 {
+		return nil, nil
+	}
+
+	var payments []types.Payment
+	if goroutines <= 1 || len(s.payments) == 1 {
+		for _, payment := range s.payments {
+			if filter(*payment) {
+				payments = append(payments, *payment)
+			}
+		}
+		
+		if len(payments) == 0 {
+			return nil, ErrAccountNotFound
+		}
+
+		return payments, nil
+	}
+
+	proportion := int(math.Ceil(float64(len(s.payments)) / float64(goroutines)))
+	
+	position := 0
+	data := make([][]*types.Payment, proportion)
+	for i := 0; i < len(s.payments); i += goroutines {
+		end := s.min(goroutines + i, len(s.payments))
+		data[position] = s.payments[i : end]
+		position++
+	}
+	
+	wg := sync.WaitGroup{}
+	mu := sync.Mutex{}
+	for i := 0; i <= goroutines; i++ {
+		wg.Add(1)
+		go func(val int) {
+			defer wg.Done()
+			for _, payment := range data[val] {
+				if filter(*payment) {
+					mu.Lock()
+					payments = append(payments, *payment)
+					mu.Unlock()
+				}
+			}
+		}(i)
+	}
+	wg.Wait()
+
+	if len(payments) == 0 {
+		return nil, ErrAccountNotFound
+	}
+
+	return payments, nil
+}
+
 func (s *Service) concurrentSum(amount *types.Money, payments []*types.Payment, wg *sync.WaitGroup, mu *sync.Mutex) {
 	sum := types.Money(0)
 	mu.Lock()
@@ -880,6 +939,14 @@ func (s *Service) containsFavorite(item *types.Favorite, items []*types.Favorite
 
 			return true
 		}
+	}
+
+	return false
+}
+
+func (s *Service) filter(payment types.Payment) bool {
+	if payment.Category == "book" {
+		return true
 	}
 
 	return false
