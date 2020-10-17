@@ -393,6 +393,26 @@ func TestService_FilterPayments_success(t *testing.T) {
 	}
 }
 
+func TestService_FilterPayments_withNoPayments(t *testing.T) {
+	s := newTestService()
+
+	accounts := []*types.Account {
+		{ ID: 1, Phone: "111111", Balance: 0 },
+	}
+
+	s.accounts = accounts
+
+	filtered, err := s.FilterPayments(1, 1)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if filtered != nil {
+		t.Fail()
+	}
+}
+
 func TestService_FilterPaymentsByFn_success(t *testing.T) {
 	s := newTestService()
 
@@ -1006,7 +1026,7 @@ func BenchmarkFilterPaymentsConcurrently(b *testing.B) {
 	}
 
 	s.accounts = accounts
-	
+
 	payments := []*types.Payment {
 		{ AccountID: 1, Amount: 1, Category: "auto" },
 		{ AccountID: 1, Amount: 1, Category: "auto" },
