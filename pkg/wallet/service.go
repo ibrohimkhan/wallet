@@ -511,14 +511,14 @@ func (s *Service) FilterPayments(accountID int64, goroutines int) ([]types.Payme
 }
 
 func (s *Service) concurrentFilter(result *[]types.Payment, accountID int64, payments []*types.Payment, wg *sync.WaitGroup, mu *sync.Mutex) {
-	mu.Lock()
 	for _, payment := range payments {
 		if payment.AccountID == accountID {
+			mu.Lock()
 			*result = append(*result, *payment)
+			mu.Unlock()
 		}
 	}
 	
-	mu.Unlock()
 	wg.Done()
 }
 
