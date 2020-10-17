@@ -898,7 +898,39 @@ func BenchmarkSumOfPaymentsConcurrently(b *testing.B) {
 	}
 }
 
-func BenchmarkFilterPayments(b *testing.B) {
+func BenchmarkFilterPaymentsRegular(b *testing.B) {
+	s := newTestService()
+
+	payments := []*types.Payment {
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 1, Amount: 1, Category: "auto" },
+		{ AccountID: 2, Amount: 1, Category: "auto" },
+		{ AccountID: 4, Amount: 1, Category: "auto" },
+		{ AccountID: 2, Amount: 1, Category: "auto" },
+		{ AccountID: 3, Amount: 1, Category: "auto" },
+	}
+	
+	s.payments = payments
+	want := 2
+	for i := 0; i < b.N; i++ {
+		filtered, err := s.FilterPayments(2, 1)
+		if err != nil {
+			b.Error(err)
+			return
+		}
+		if len(filtered) != want {
+			b.Fatalf("invalid result, got %v, want %v", len(filtered), want)
+		}
+	}
+}
+
+func BenchmarkFilterPaymentsConcurrently(b *testing.B) {
 	s := newTestService()
 
 	payments := []*types.Payment {
