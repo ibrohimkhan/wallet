@@ -477,6 +477,11 @@ func (s *Service) FilterPayments(accountID int64, goroutines int) ([]types.Payme
 				payments = append(payments, *payment)
 			}
 		}
+		
+		if len(payments) == 0 {
+			return nil, ErrAccountNotFound
+		}
+
 		return payments, nil
 	}
 
