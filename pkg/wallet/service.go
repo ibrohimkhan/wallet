@@ -591,34 +591,37 @@ func (s *Service) SumPaymentsWithProgress() <-chan Progress {
 		return nil
 	}
 
+	wg := sync.WaitGroup{}
 	ch := make(chan Progress)
-	//defer close(ch)
+	defer close(ch)
 
 	parts := 100_000
 	size := len(s.payments) / parts
-	count := 0
 
+	sum := types.Money(0)
 	for i := 0; i < parts; i++ {
-		go func(ch1 chan<- Progress, payments []*types.Payment) {
-			sum := types.Money(0)
-			
-			for _, payment := range payments {
-				sum += payment.Amount
-			}
-			
-			progress := Progress {
-				Part:	count,
-				Result: sum,
-			}
-			
-			ch1 <- progress
+		wg.Add(1)
+		go s.sumPayments(&sum, s.payments[i * size : (i + 1) * size], &wg)
 
-		}(ch, s.payments[i * size : (i + 1) * size])
+		progress := Progress {
+			Part:	i,
+			Result: sum,
+		}
+		ch <- progress
+	}
+	wg.Wait()
+	
+	return ch
+}
 
-		count++
+func (s *Service) sumPayments(amount *types.Money, payments []*types.Payment, wg *sync.WaitGroup) {
+	sum := types.Money(0)
+	for _, payment := range payments {
+		sum += payment.Amount
 	}
 
-	return ch
+	*amount += sum
+	wg.Done()
 }
 
 func (s *Service) concurrentSum(amount *types.Money, payments []*types.Payment, wg *sync.WaitGroup, mu *sync.Mutex) {
