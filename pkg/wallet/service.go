@@ -40,6 +40,12 @@ type Service struct {
 	favorites		[]*types.Favorite
 }
 
+// Progress used for summing payments
+type Progress struct {
+	Part 	int
+	Result 	types.Money
+}
+
 // RegisterAccount registering new account
 func (s *Service) RegisterAccount(phone types.Phone) (*types.Account, error) {
 	for _, account := range s.accounts {
@@ -577,6 +583,42 @@ func (s *Service) FilterPaymentsByFn(
 	}
 
 	return payments, nil
+}
+
+// SumPaymentsWithProgress - summing payments
+func (s *Service) SumPaymentsWithProgress() <-chan Progress {
+	if len(s.payments) == 0 {
+		return nil
+	}
+
+	ch := make(chan Progress)
+	//defer close(ch)
+
+	parts := 100_000
+	size := len(s.payments) / parts
+	count := 0
+
+	for i := 0; i < parts; i++ {
+		go func(ch1 chan<- Progress, payments []*types.Payment) {
+			sum := types.Money(0)
+			
+			for _, payment := range payments {
+				sum += payment.Amount
+			}
+			
+			progress := Progress {
+				Part:	count,
+				Result: sum,
+			}
+			
+			ch1 <- progress
+
+		}(ch, s.payments[i * size : (i + 1) * size])
+
+		count++
+	}
+
+	return ch
 }
 
 func (s *Service) concurrentSum(amount *types.Money, payments []*types.Payment, wg *sync.WaitGroup, mu *sync.Mutex) {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"time"
 	"sync"
 	"path/filepath"
 	"log"
@@ -10,7 +11,99 @@ import (
 )
 
 func main() {
-	//history()
+	testNewTick()
+}
+
+func testNewTick() {
+	ch := newtick()
+	for i := range ch {
+		log.Println(i)
+	}
+}
+
+func newtick() <- chan int {
+	ch := make(chan int)
+	go func() {
+		for i := 0; i < 10; i++ {
+			ch <- i
+		}
+		close(ch)
+	}()
+
+	return ch
+}
+
+func multiplexingExample() {
+	done  := make(chan struct{})
+
+	go tick(done)
+
+	<- time.After(time.Second * 5)
+	done <- struct{}{}
+}
+
+func tick(done <- chan struct{}) {
+	for {
+		select {		
+		case <- done:
+			return
+		case <- time.After(time.Second):
+			log.Println("tick")
+		}			
+	}
+}
+
+func noBlockingChannelExample() {
+	done  := make(chan struct{})
+
+	go func() {
+		for {
+			select {		
+			case <- done:   // blocking part waits signal
+				return
+			default:		// unblocking bihavior
+			}
+			time.Sleep(time.Second)
+			log.Println("tick")
+		}
+	}()
+
+	time.Sleep(time.Second * 10)
+	done <- struct{}{}
+}
+
+func blockingChannelExample() {
+	done  := make(chan struct{})
+
+	go func() {
+		// what to do here?
+		// <- done blocks the app
+		log.Println("goroutine")
+	}()
+
+	time.Sleep(time.Second * 10)
+	done <- struct{}{}
+}
+
+func bufferedChannelsExample() {
+	done := make(chan struct{}, 1) // not empty channel
+	log.Println(len(done))
+
+	done <- struct{}{}
+	log.Println(len(done))
+
+	<- done
+	log.Println("done")
+}
+
+func unbufferedChannelsExample() {
+	done := make(chan struct{}) // empty channel
+	log.Println(len(done))
+
+	//done <- struct{}{}
+	//val := <- done
+	<- done
+	log.Println("done")
 }
 
 func min(a int, b int) int  {

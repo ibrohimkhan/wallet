@@ -455,6 +455,32 @@ func TestService_FilterPaymentsByFn_success(t *testing.T) {
 	}
 }
 
+func TestService_SumPaymentsWithProgress_success(t *testing.T) {
+	s := newTestService()
+
+	var payments []*types.Payment
+	for i := 0; i < 100000; i++ {
+		payment := &types.Payment {
+			AccountID: 1, Amount: 1, Category: "auto",
+		}
+
+		payments = append(payments, payment)
+	}
+
+	s.payments = payments
+	ch := s.SumPaymentsWithProgress()
+	total := types.Money(0)
+
+	for i := 0; i < 100000; i++ {
+		progress := <- ch
+		total += progress.Result
+	}
+
+	if total != 100000 {
+		t.Errorf("invalid result! Expected %v, got %v", 100000, total)
+	}
+}
+
 func TestService_SumOf_success(t *testing.T) {
 	s := newTestService()
 
