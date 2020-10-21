@@ -481,6 +481,14 @@ func TestService_SumPaymentsWithProgress_success(t *testing.T) {
 	}
 }
 
+func TestService_SumPaymentsWithProgress_empty(t *testing.T) {
+	s := newTestService()
+	ch := s.SumPaymentsWithProgress()
+	if 0 != len(ch) {
+		t.Fail()
+	}
+}
+
 func TestService_SumOf_success(t *testing.T) {
 	s := newTestService()
 
