@@ -599,7 +599,7 @@ func (s *Service) SumPaymentsWithProgress() <-chan Progress {
 
 	for i := 0; i < parts; i++ {
 		wg.Add(1)
-		go func(ch1 *chan Progress, payments []*types.Payment, index int) {
+		go func(ch1 chan<- Progress, payments []*types.Payment, index int) {
 			defer wg.Done()
 
 			sum := types.Money(0)
@@ -612,15 +612,15 @@ func (s *Service) SumPaymentsWithProgress() <-chan Progress {
 				Result: sum,
 			}
 			
-			*ch1 <- progress
+			ch1 <- progress
 
-		}(&ch, s.payments[i * size : (i + 1) * size], i)
+		}(ch, s.payments[i * size : (i + 1) * size], i)
 	}
 
-	go func(wg *sync.WaitGroup, ch *chan Progress) {
+	go func() {
 		wg.Wait()
-		close(*ch)
-	}(&wg, &ch)
+		close(ch)
+	}()
 	
 	return ch
 }

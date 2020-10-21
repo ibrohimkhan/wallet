@@ -469,8 +469,8 @@ func TestService_SumPaymentsWithProgress_success(t *testing.T) {
 
 	s.payments = payments
 	ch := s.SumPaymentsWithProgress()
-	total := types.Money(0)
 
+	total := types.Money(0)
 	for i := 0; i < 100000; i++ {
 		progress := <- ch
 		total += progress.Result
