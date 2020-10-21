@@ -587,13 +587,14 @@ func (s *Service) FilterPaymentsByFn(
 
 // SumPaymentsWithProgress - summing payments
 func (s *Service) SumPaymentsWithProgress() <-chan Progress {
-	wg := sync.WaitGroup{}
 	ch := make(chan Progress)
-	
 	if len(s.payments) == 0 {
+		close(ch)
 		return ch
 	}
-
+	
+	wg := sync.WaitGroup{}
+	
 	parts := 100_000
 	size := len(s.payments) / parts
 
