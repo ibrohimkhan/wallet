@@ -456,7 +456,7 @@ func TestService_FilterPaymentsByFn_success(t *testing.T) {
 }
 
 func TestService_SumPaymentsWithProgress_success(t *testing.T) {
-	/* s := newTestService()
+	s := newTestService()
 
 	var payments []*types.Payment
 	for i := 0; i < 100000; i++ {
@@ -478,7 +478,7 @@ func TestService_SumPaymentsWithProgress_success(t *testing.T) {
 
 	if total != 100000 {
 		t.Errorf("invalid result! Expected %v, got %v", 100000, total)
-	} */
+	}
 }
 
 func TestService_SumOf_success(t *testing.T) {
