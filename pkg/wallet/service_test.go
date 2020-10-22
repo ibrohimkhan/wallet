@@ -1133,7 +1133,7 @@ func BenchmarkFilterPaymentsByFnConcurrently(b *testing.B) {
 func BenchmarkSumPaymentsWithProgress(b *testing.B) {
 	s := newTestService()
 
-	count := 1_000_000
+	count := 10_000_000
 	var payments []*types.Payment
 	for i := 0; i < count; i++ {
 		payment := &types.Payment {
@@ -1153,7 +1153,7 @@ func BenchmarkSumPaymentsWithProgress(b *testing.B) {
 			total += progress.Result
 		}
 
-		want := types.Money(1_000_000)
+		want := types.Money(10_000_000)
 		if total != want {
 			b.Errorf("invalid result! Expected %v, got %v", want, total)
 		}
