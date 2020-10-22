@@ -596,11 +596,43 @@ func (s *Service) SumPaymentsWithProgress() <-chan Progress {
 	wg := sync.WaitGroup{}
 	
 	parts := 100_000
-	size := len(s.payments) / parts
+	proportion := int(math.Ceil(float64(len(s.payments)) / float64(parts)))
+	
+	position := 0
+	data := make([][]*types.Payment, proportion)
+	for i := 0; i < len(s.payments); i += parts {
+		end := s.min(parts + i, len(s.payments))
+		data[position] = s.payments[i : end]
+		position++
+	}
 
-	for i := 0; i < parts; i++ {
+	for i := 0; i < position; i++ { 
+		wg.Add(1)
+		go func(val int) {
+			defer wg.Done()
+
+			sum := types.Money(0)
+			for _, payment := range data[val] {
+				sum += payment.Amount
+			}
+
+			progress := Progress {
+				Part:	val,
+				Result: sum,
+			}
+			
+			ch <- progress
+
+		}(i)
+	}
+
+	/* size := len(s.payments) / parts
+
+	for i := 0; i < size; i++ {
 		wg.Add(1)
 		go func(ch1 chan<- Progress, payments []*types.Payment, index int) {
+			wg.Done()
+
 			sum := types.Money(0)
 			for _, payment := range payments {
 				sum += payment.Amount
@@ -612,12 +644,10 @@ func (s *Service) SumPaymentsWithProgress() <-chan Progress {
 			}
 			
 			ch1 <- progress
-			defer wg.Done()
 
 		}(ch, s.payments[i * size : (i + 1) * size], i)
-	}
+	}*/
 
-	
 	go func() {
 		defer close(ch)
 		wg.Wait()

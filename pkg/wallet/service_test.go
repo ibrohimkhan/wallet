@@ -458,8 +458,9 @@ func TestService_FilterPaymentsByFn_success(t *testing.T) {
 func TestService_SumPaymentsWithProgress_success(t *testing.T) {
 	s := newTestService()
 
+	count := 1_000_000
 	var payments []*types.Payment
-	for i := 0; i < 100000000; i++ {
+	for i := 0; i < count; i++ {
 		payment := &types.Payment {
 			AccountID: 1, Amount: 1, Category: "auto",
 		}
@@ -471,13 +472,14 @@ func TestService_SumPaymentsWithProgress_success(t *testing.T) {
 	ch := s.SumPaymentsWithProgress()
 
 	total := types.Money(0)
-	for i := 0; i < 100000000; i++ {
+	for i := 0; i < count; i++ {
 		progress := <- ch
 		total += progress.Result
 	}
 
-	if total != 100000000 {
-		t.Errorf("invalid result! Expected %v, got %v", 100000000, total)
+	want := 1_000_000
+	if int(total) != want {
+		t.Errorf("invalid result! Expected %v, got %v", want, total)
 	}
 }
 
@@ -1133,7 +1135,7 @@ func BenchmarkFilterPaymentsByFnConcurrently(b *testing.B) {
 func BenchmarkSumPaymentsWithProgress(b *testing.B) {
 	s := newTestService()
 
-	count := 10_000_000
+	count := 100_000
 	var payments []*types.Payment
 	for i := 0; i < count; i++ {
 		payment := &types.Payment {
@@ -1153,7 +1155,7 @@ func BenchmarkSumPaymentsWithProgress(b *testing.B) {
 			total += progress.Result
 		}
 
-		want := types.Money(10_000_000)
+		want := types.Money(100_000)
 		if total != want {
 			b.Errorf("invalid result! Expected %v, got %v", want, total)
 		}
